@@ -1,0 +1,5 @@
+# Read the documentation: https://fosrestbundle.readthedocs.io/en/3.x/
+fos_rest:
+    format_listener:
+        rules:
+            - { path: ^/api, prefer_extension: true, fallback_format: json, priorities: [ json, html ] }
