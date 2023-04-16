@@ -39,13 +39,44 @@ class AuthController extends AbstractController
 
     public function data($users, &$listUser): void
     {
-        foreach ($users as $user) {
+        if (is_array($users))
+            foreach ($users as $user) {
+                $listUser[] = [
+                    'id' => $user->getId(),
+                    'email' => $user->getEmail(),
+                    'roles' => $user->getRoles(),
+                    'userName' => $user->getUserName()
+                ];
+            }
+        else {
             $listUser = [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'roles' => $user->getRoles(),
-                'userName' => $user->getUserName()
+                'id' => $users->getId(),
+                'email' => $users->getEmail(),
+                'roles' => $users->getRoles(),
+                'userName' => $users->getUserName()
             ];
+        }
+    }
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param $id
+     * @return Response
+     */
+    #[Route('/user/{id}', name: 'get_user', methods: ['get'])]
+    public function getOneUser(EntityManagerInterface $em, $id): Response
+    {
+        // make try and catch for this function and return the error message
+        try {
+            $user = $em->getRepository(Users::class)->findOneBy(['id' => $id]);
+            if (!$user)
+                return $this->json(['message' => 'User not found']);
+            $listUser = [];
+            $this->data($user, $listUser);
+            /** @var Users $listUser */
+            return $this->json($listUser);
+        } catch (\Exception $e) {
+            return $this->json(['message' => $e->getMessage()]);
         }
     }
 
@@ -71,5 +102,27 @@ class AuthController extends AbstractController
         $em->persist($user);
         $em->flush();
         return $this->json(['message' => 'Registered Successfully']);
+    }
+
+    #[Route('/edit/{id}', name: 'edit', methods: ['put'])]
+    public function edit(EntityManagerInterface $em, $id, Request $request, UserPasswordHasherInterface $passwordHasher): Response
+    {
+        $decoded = json_decode($request->getContent());
+        $email = $decoded->email;
+        $roles = $decoded->roles ?? ['ROLE_USER'];
+        $user = $em->getRepository(Users::class)->findOneBy(['id' => $id]);
+        if (!$user)
+            return $this->json(['message' => 'User not found']);
+        else{
+            $user->setEmail($email ?? $user->getEmail());
+            $user->setRoles($roles ?? $user->getRoles());
+            if (isset($decoded->userName)) {
+                $userName = $decoded->userName;
+                $user->setUserName($userName ?? $user->getUserName());
+            }
+            $em->persist($user);
+            $em->flush();
+            return $this->json(['message' => 'updated Successfully']);
+        }
     }
 }

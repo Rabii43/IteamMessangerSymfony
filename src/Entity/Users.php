@@ -6,6 +6,7 @@ use App\Repository\UsersRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -16,18 +17,22 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["list_users"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Groups(["list_users"])]
     private ?string $email = null;
 
     #[ORM\Column]
+    #[Groups(["list_users"])]
     private array $roles = [];
 
     /**
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Groups(["list_users"])]
     private ?string $password = null;
 
     /**
@@ -47,12 +52,15 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     #[ORM\Column]
+    #[Groups(["list_users"])]
     private ?string $userName = null;
 
     #[ORM\ManyToMany(targetEntity: Message::class, mappedBy: 'sender')]
+    #[Groups(["list_users"])]
     private Collection $messagesSender;
 
     #[ORM\ManyToMany(targetEntity: Message::class, inversedBy: 'received')]
+    #[Groups(["list_users"])]
     private Collection $receivedMessage;
 
     public function __construct()
